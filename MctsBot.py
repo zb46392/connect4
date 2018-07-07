@@ -1,7 +1,7 @@
 #import time
 from Board import Board
 from math import sqrt, log
-
+from random import randint
 
 
 class Node(object):
@@ -40,41 +40,61 @@ class MCTS_BOT(object):
     
     def __init__(self, timeToMakeMove = None):
         self.timeToMakeMove = 10 if timeToMakeMove is None else timeToMakeMove
+
         
     def makeMove(self, board):
         currentState = board.toString()
         states = {currentState : Node()}
         
-        self.simulate(states, self.NBR_OF_SIMULATIONS)
+        self.simulate(currentState, states, self.NBR_OF_SIMULATIONS)
         
         return self.pickBestMove(states, currentState)
         
     
-    def simulate(self, states, nbrOfSimulations):
+    def simulate(self, rootState, states, nbrOfSimulations):
         
-        expandetState = self.expandState(self.selectStateForExpansion())
-        
-        self.generateRollout(expandetState)
-        
-        # recursive function 
-        # get ( end of selection phase )
-        # 
-        pass
+        if(nbrOfSimulations > 0):
+            self.selectStateForExpansion(rootState, states)
+            
+            
+            self.updateStates(self.generateRollout(self.expandState()))
+            
+        else:
+            return
     
     
-    def selectStateForExpansion(self, observingState, states):
-        while (len(states[observingState].nextStates < len(Board(observingState).generateLegalMoves()))):
-            observingState = self.findStateForSelection(observingState, states)
+    def selectStateForExpansion(self, rootState, states):
+        observingState = states[rootState]
+        
+        while(len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())):
+            observingState = self.selectNextObservingState(observingState, states)
             
         return observingState
     
-    def findStateForSelection(self, observingState, states):
-        stateForSelection = states[observingState].nextStates[0]
+    def selectNextObservingState(self, observingState, states):
+        nextState = None
         for state in states[observingState].nextStates:
-            pass 
+            if nextState is not None:
+                if state.calculateUCT(observingState.nbrOfSimulations) > nextState.calculateUCT(observingState.nbrOfSimulations):
+                    nextState = state
+            else:
+                nextState = state
+                
+        return nextState
     
-    def makeExpansion(self):
-        pass
+    def expandState(self, state, states):
+        
+        board = Board(state)
+        moves = board.generateLegalMoves()
+        nextStates = [board.copy().move(move).toString() for move in moves]        
+        possibleStates = [possibleState for possibleState in nextStates if possibleState not in states]
+        
+        expandetState = possibleStates[randint(0, (len(possibleStates) - 1))]
+                
+        states[expandetState] = Node()
+        
+        return expandetState
+        
     
     def makeRollout(self):
         pass
