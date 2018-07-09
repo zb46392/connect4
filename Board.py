@@ -10,7 +10,7 @@ class Board(object):
     
     def __init__(self, init_str=None, turn=1):
         self.turn = turn
-        self.setup(self.INIT_BOARD if init_str is None else self.init_str)
+        self.setup(self.INIT_BOARD if init_str is None else init_str)
         
     def __str__(self):
         board = ""        
