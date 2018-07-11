@@ -8,10 +8,23 @@ class Board(object):
     PLAYER_2_WIN = 2
     DRAW = 3
     
-    def __init__(self, init_str=None, turn=1):
-        self.turn = turn
-        self.setup(self.INIT_BOARD if init_str is None else init_str)
+    def __init__(self, init_str=None):
+        if(init_str is None):
+            self.setup(self.INIT_BOARD)
+            self.turn = 1
+        else:
+            self.turn = self.calculateTurn(init_str)
+            self.setup(init_str)        
+
+    def calculateTurn(self, boardState):
+        player1 = boardState.count('1')
+        player2 = boardState.count('2')
         
+        if(player1 > player2):
+            return 2
+        else:
+            return 1
+    
     def __str__(self):
         board = ""        
         for i in range((self.ROWS * self.COLLUMNS), 0, (0 - self.COLLUMNS)):

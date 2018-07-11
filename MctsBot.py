@@ -21,14 +21,6 @@ class Node(object):
         
     def calculateUCT(self, nbrOfSimulationsOnParent):
         return self.calculateExploitation() + self.calculateExploration(nbrOfSimulationsOnParent)
-    
-    
-class Tree(object):
-    def __init__(self):
-        self.root = Node(None)
-        self.states = [] # {board: Node}
-        
-    
 
 
 class MCTS_BOT(object):
@@ -60,20 +52,22 @@ class MCTS_BOT(object):
             
     def runSimulation(self, observingState, states):
         if(len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())):
-            score = self.runSimulation(self.selectNextObservingState(observingState, states), states)
-            states[observingState].score += score
-            states[observingState].nbrOfSimulations += 1            
+            score = self.runSimulation(self.selectNextObservingState(observingState, states), states)            
         else:
-            score = self.generateRolloutScore(self.expandState(observingState, states))
-            states[observingState].score += score
-            states[observingState].nbrOfSimulations += 1 
+            expandetState = self.expandState(observingState, states)            
+            score = self.generateRolloutScore(expandetState)
             
-            return score
+            states[expandetState].score += score
+            states[expandetState].nbrOfSimulations += 1
+        
+        states[observingState].score += score
+        states[observingState].nbrOfSimulations += 1
+        return score
     
     def selectNextObservingState(self, observingState, states):
         nextState = None
         for state in states[observingState].nextStates:
-            print(state + " : " + str(states[state].nbrOfSimulations) + " -> " + str(states[state].score))
+            
             if nextState is not None:
                 if states[state].calculateUCT(states[observingState].nbrOfSimulations) > states[nextState].calculateUCT(states[observingState].nbrOfSimulations):
                     nextState = state
@@ -91,13 +85,14 @@ class MCTS_BOT(object):
             tmpBoard = board.copy()
             tmpBoard.move(move)
             nextStates.append(tmpBoard.toString())
-            
+        print(nextStates)
         possibleStates = [possibleState for possibleState in nextStates if possibleState not in states] 
+        print(possibleStates)
         expandetState = possibleStates[randint(0, (len(possibleStates) - 1))]
                 
         states[state].nextStates.append(expandetState)
         states[expandetState] = Node()
-        
+        print("\n\n")
         return expandetState
         
     
@@ -133,6 +128,4 @@ moves = board.generateLegalMoves()
 state = board.toString()
 states = {state : Node()}
 
-
-#print(nBoard.toString())
 print(mc_bot.makeMove(board.copy()))
