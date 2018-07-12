@@ -5,7 +5,7 @@ from random import randint
 
 
 class Node(object):
-    C = 0.5 # sqrt(0.2)    
+    C = sqrt(0.2)    
     
     def __init__(self):
         self.nbrOfSimulations = 0
@@ -47,22 +47,34 @@ class MCTS_BOT(object):
     
     def simulate(self, rootState, states):
         for i in range(self.NBR_OF_SIMULATIONS):
-            self.runSimulation(rootState, states)
+            self.runSimulation(rootState, states)      
             
             
     def runSimulation(self, observingState, states):
+        
+        self.addExistingNextStatesNotInNextStates(observingState, states)
+        
         if(len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())):
             score = self.runSimulation(self.selectNextObservingState(observingState, states), states)            
-        else:
+        else:            
             expandetState = self.expandState(observingState, states)            
             score = self.generateRolloutScore(expandetState)
             
             states[expandetState].score += score
             states[expandetState].nbrOfSimulations += 1
         
+        
         states[observingState].score += score
         states[observingState].nbrOfSimulations += 1
+        
         return score
+    
+    def addExistingNextStatesNotInNextStates(self, observingState, states):
+        allNextStates = self.generateNextStates(observingState)
+        
+        for state in allNextStates:
+            if((state not in states[observingState].nextStates) and (state in states)):
+                states[observingState].nextStates.append(state)
     
     def selectNextObservingState(self, observingState, states):
         nextState = None
@@ -73,10 +85,28 @@ class MCTS_BOT(object):
                     nextState = state
             else:
                 nextState = state
-                
+
+        if(nextState is None):
+            print(observingState)
+            print(states[observingState].nextStates)
+            print(len(states[observingState].nextStates)) 
+            print(len(Board(observingState).generateLegalMoves()))
+        
         return nextState
     
     def expandState(self, state, states):
+        nextStates = self.generateNextStates(state)
+            
+        possibleStates = [possibleState for possibleState in nextStates if possibleState not in states] 
+
+        expandetState = possibleStates[randint(0, (len(possibleStates) - 1))]
+                
+        states[state].nextStates.append(expandetState)
+        states[expandetState] = Node()
+
+        return expandetState
+        
+    def generateNextStates(self, state):
         board = Board(state)
         moves = board.generateLegalMoves()
         nextStates = []
@@ -85,17 +115,9 @@ class MCTS_BOT(object):
             tmpBoard = board.copy()
             tmpBoard.move(move)
             nextStates.append(tmpBoard.toString())
-        print(nextStates)
-        possibleStates = [possibleState for possibleState in nextStates if possibleState not in states] 
-        print(possibleStates)
-        expandetState = possibleStates[randint(0, (len(possibleStates) - 1))]
-                
-        states[state].nextStates.append(expandetState)
-        states[expandetState] = Node()
-        print("\n\n")
-        return expandetState
         
-    
+        return nextStates
+        
     def generateRolloutScore(self, expandedState):
         board = Board(expandedState)
         
@@ -120,8 +142,21 @@ class MCTS_BOT(object):
         return board.checkGameState() == self.playerNbr
         
     def pickBestMove(self, state, states):
-        return self.selectNextObservingState(state, states)
-
+        board = Board(state)
+        moves = board.generateLegalMoves()
+        bestState = self.selectNextObservingState(state, states)
+        bestMove = None
+        
+        for move in moves:
+            cBoard = board.copy()
+            cBoard.move(move)
+            if(cBoard.toString() == bestState):
+                bestMove = move
+                break
+            
+        
+        return bestMove
+'''
 mc_bot = MCTS_BOT()
 board = Board()
 moves = board.generateLegalMoves()
@@ -129,3 +164,4 @@ state = board.toString()
 states = {state : Node()}
 
 print(mc_bot.makeMove(board.copy()))
+'''

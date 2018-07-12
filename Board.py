@@ -61,9 +61,7 @@ class Board(object):
 
    
     def copy(self):
-        cBoard= Board()
-        cBoard.turn = self.turn
-        cBoard.board = self.board[:]  
+        cBoard = Board(self.toString()) 
         return cBoard
         
     def move(self, m):

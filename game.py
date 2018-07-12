@@ -1,5 +1,6 @@
 from Board import Board
 from RandomBot import RandomBot
+from MctsBot import MCTS_BOT
 from gui import GUI
 import time
 import threading
@@ -7,7 +8,7 @@ import threading
 def play():
     board = Board()
     bot1 = RandomBot()
-    bot2 = RandomBot()
+    bot2 = MCTS_BOT()
     while (board.checkGameState() == board.STILL_PLAYING):
         if board.turn == 1:
             board.move(bot1.makeMove(board.copy()))
