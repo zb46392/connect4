@@ -5,7 +5,7 @@ from random import randint
 
 
 class Node(object):
-    C = sqrt(0.2)    
+    C = 2   
     
     def __init__(self):
         self.nbrOfSimulations = 0
@@ -25,10 +25,6 @@ class Node(object):
 
 class MCTS_BOT(object):
     NBR_OF_SIMULATIONS = 1000
-        # 1) SELECTION -> selectNextNode until Node is unexplored (traverse tree)
-        # 2) EXPANSION ? -> add new Node to tree
-        # 3) ROLLOUT -> play random game 
-        # 4) BACKPROPAGATION -> update nodes
     
     def __init__(self):
         pass
@@ -51,17 +47,27 @@ class MCTS_BOT(object):
             
             
     def runSimulation(self, observingState, states):
-        
+        score = 0        
         self.addExistingNextStatesNotInNextStates(observingState, states)
         
         if(len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())):
             score = self.runSimulation(self.selectNextObservingState(observingState, states), states)            
-        else:            
-            expandetState = self.expandState(observingState, states)            
-            score = self.generateRolloutScore(expandetState)
+        else:
             
-            states[expandetState].score += score
-            states[expandetState].nbrOfSimulations += 1
+            
+            if self.stateIsTerminal(observingState):
+                expandetState = self.expandState(observingState, states)
+
+                if self.stateIsTerminal(expandetState):
+                    score = self.calculateScore(Board(expandetState))
+                else:
+                    score = self.generateRolloutScore(expandetState)
+                
+                states[expandetState].score += score
+                states[expandetState].nbrOfSimulations += 1
+                
+            else:
+                score = self.calculateScore(Board(observingState))
         
         
         states[observingState].score += score
@@ -85,12 +91,6 @@ class MCTS_BOT(object):
                     nextState = state
             else:
                 nextState = state
-
-        if(nextState is None):
-            print(observingState)
-            print(states[observingState].nextStates)
-            print(len(states[observingState].nextStates)) 
-            print(len(Board(observingState).generateLegalMoves()))
         
         return nextState
     
@@ -124,13 +124,21 @@ class MCTS_BOT(object):
         while (board.checkGameState() == board.STILL_PLAYING):
             self.makeRandomMove(board)
             
+        return self.calculateScore(board)
+            
+    def calculateScore(self, board):
+        
         if(self.hasWon(board)):
             return 1
         elif(board.checkGameState() == board.DRAW):
             return 0.5
         else:
             return 0
-    
+        
+    def stateIsTerminal(self, state):
+        board = Board(state)
+        
+        return board.checkGameState != 0
     
     def makeRandomMove(self, board):
         moves = board.generateLegalMoves()
@@ -156,12 +164,3 @@ class MCTS_BOT(object):
             
         
         return bestMove
-'''
-mc_bot = MCTS_BOT()
-board = Board()
-moves = board.generateLegalMoves()
-state = board.toString()
-states = {state : Node()}
-
-print(mc_bot.makeMove(board.copy()))
-'''
