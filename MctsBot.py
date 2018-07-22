@@ -5,7 +5,7 @@ from random import randint
 
 
 class Node(object):
-    C = 2   
+    C = 0.5   
     
     def __init__(self):
         self.nbrOfSimulations = 0
@@ -14,17 +14,17 @@ class Node(object):
         self.move = None
         
     def calculateExploitation(self):
-        return (self.score/self.nbrOfSimulations)
+        return (float(self.score)/self.nbrOfSimulations)
         
     def calculateExploration(self, nbrOfSimulationsOnParent):
-        return self.C * sqrt((log(nbrOfSimulationsOnParent))/(self.nbrOfSimulations))
+        return self.C * sqrt((log(float(nbrOfSimulationsOnParent)))/(self.nbrOfSimulations))
         
     def calculateUCT(self, nbrOfSimulationsOnParent):
         return self.calculateExploitation() + self.calculateExploration(nbrOfSimulationsOnParent)
 
 
 class MCTS_BOT(object):
-    NBR_OF_SIMULATIONS = 1000
+    NBR_OF_SIMULATIONS = 10
     
     def __init__(self):
         pass
@@ -50,24 +50,23 @@ class MCTS_BOT(object):
         score = 0        
         self.addExistingNextStatesNotInNextStates(observingState, states)
         
-        if(len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())):
+        if((len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())) and (not self.stateIsTerminal(observingState))):
             score = self.runSimulation(self.selectNextObservingState(observingState, states), states)            
         else:
             
             
             if self.stateIsTerminal(observingState):
-                expandetState = self.expandState(observingState, states)
-
-                if self.stateIsTerminal(expandetState):
-                    score = self.calculateScore(Board(expandetState))
-                else:
-                    score = self.generateRolloutScore(expandetState)
-                
-                states[expandetState].score += score
-                states[expandetState].nbrOfSimulations += 1
-                
-            else:
                 score = self.calculateScore(Board(observingState))
+            else:
+                expandedState = self.expandState(observingState, states)
+
+                if self.stateIsTerminal(expandedState):
+                    score = self.calculateScore(Board(expandedState))
+                else:
+                    score = self.generateRolloutScore(expandedState)
+                
+                states[expandedState].score += score
+                states[expandedState].nbrOfSimulations += 1
         
         
         states[observingState].score += score
@@ -85,13 +84,12 @@ class MCTS_BOT(object):
     def selectNextObservingState(self, observingState, states):
         nextState = None
         for state in states[observingState].nextStates:
-            
             if nextState is not None:
                 if states[state].calculateUCT(states[observingState].nbrOfSimulations) > states[nextState].calculateUCT(states[observingState].nbrOfSimulations):
                     nextState = state
             else:
                 nextState = state
-        
+                
         return nextState
     
     def expandState(self, state, states):
@@ -99,12 +97,12 @@ class MCTS_BOT(object):
             
         possibleStates = [possibleState for possibleState in nextStates if possibleState not in states] 
 
-        expandetState = possibleStates[randint(0, (len(possibleStates) - 1))]
+        expandedState = possibleStates[randint(0, (len(possibleStates) - 1))]
                 
-        states[state].nextStates.append(expandetState)
-        states[expandetState] = Node()
-
-        return expandetState
+        states[state].nextStates.append(expandedState)
+        states[expandedState] = Node()
+        
+        return expandedState
         
     def generateNextStates(self, state):
         board = Board(state)
@@ -138,7 +136,7 @@ class MCTS_BOT(object):
     def stateIsTerminal(self, state):
         board = Board(state)
         
-        return board.checkGameState != 0
+        return board.checkGameState() is not board.STILL_PLAYING
     
     def makeRandomMove(self, board):
         moves = board.generateLegalMoves()
