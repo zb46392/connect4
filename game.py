@@ -39,7 +39,7 @@ def guiUserPlay():
 RANDOM_VS_MCTS_GUI = 0
 RANDOM_VS_MCTS_NOGUI = 1
 USER_VS_MCTS = 2
-GAME_STYLE = 0
+GAME_STYLE = 2
 if __name__ == '__main__':
     
     if GAME_STYLE is RANDOM_VS_MCTS_GUI:
@@ -81,8 +81,38 @@ if __name__ == '__main__':
         gui = None
         thread_stop = True
         t.join()
-        '''
+        #
         b = Board()
         gui = GUI(GUI.USER_PLAY)
         gui.show(b)
         gui.root.mainloop()
+        '''
+        
+        board = Board()
+        bot = MCTS_BOT()
+        botScore = 0
+        playerScore = 0        
+        
+        board = Board()
+        while (board.checkGameState() == board.STILL_PLAYING):
+            if board.turn == 1:
+                board.move(bot.makeMove(board.copy()))
+            else:
+                move = None
+                print(board)
+                print("\nPossible moves: " + str(board.generateLegalMoves()))
+                move = input("\nMake a move: ")
+                while(move not in board.generateLegalMoves()):
+                    print("Invalid input...try again...\n")
+                    print("\nPossible moves: " + str(board.generateLegalMoves()))
+                    move = input("\nMake a move: ")
+                    
+                board.move(move)
+                
+                
+        if board.checkGameState() == board.PLAYER_1_WIN:
+            print("PLAYER 1 WINS!\n")
+        elif  board.checkGameState() == board.PLAYER_2_WIN:
+            print("PLAYER 2 WINS!\n")
+            
+        print(board)

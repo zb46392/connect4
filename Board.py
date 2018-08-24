@@ -29,7 +29,12 @@ class Board(object):
         board = ""        
         for i in range((self.ROWS * self.COLLUMNS), 0, (0 - self.COLLUMNS)):
             for j in range((i-self.COLLUMNS), i, 1):
-                board += str(self.board[j])
+                if self.board[j] == 0:
+                    board += "-"
+                elif self.board[j] == 1:
+                    board += "X"
+                else:
+                    board += "O"                
             board += "\n"            
         return board
         

@@ -23,7 +23,7 @@ class Node(object):
 
 
 class MCTS_BOT(object):
-    NBR_OF_SIMULATIONS = 1000
+    NBR_OF_SIMULATIONS = 300
     
     def __init__(self):
         self.states = {}
