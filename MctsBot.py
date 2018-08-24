@@ -1,4 +1,3 @@
-#import time
 from Board import Board
 from math import sqrt, log
 from random import randint
@@ -24,83 +23,85 @@ class Node(object):
 
 
 class MCTS_BOT(object):
-    NBR_OF_SIMULATIONS = 10
+    NBR_OF_SIMULATIONS = 1000
     
     def __init__(self):
-        pass
+        self.states = {}
 
         
     def makeMove(self, board):
         self.playerNbr = board.turn
         currentState = board.toString()
-        states = {currentState : Node()}
+        
+        if currentState not in self.states:
+            self.states[currentState] = Node()
         
         
-        self.simulate(currentState, states)
+        self.simulate(currentState)
         
-        return self.pickBestMove(currentState, states)
+        return self.pickBestMove(currentState)
         
     
-    def simulate(self, rootState, states):
+    def simulate(self, rootState):
         for i in range(self.NBR_OF_SIMULATIONS):
-            self.runSimulation(rootState, states)      
+            self.runSimulation(rootState)      
             
             
-    def runSimulation(self, observingState, states):
+    def runSimulation(self, observingState):
         score = 0        
-        self.addExistingNextStatesNotInNextStates(observingState, states)
+        self.addExistingNextStatesNotInNextStates(observingState)
         
-        if((len(states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())) and (not self.stateIsTerminal(observingState))):
-            score = self.runSimulation(self.selectNextObservingState(observingState, states), states)            
+        if((len(self.states[observingState].nextStates) == len(Board(observingState).generateLegalMoves())) and (not self.stateIsTerminal(observingState))):
+            score = self.runSimulation(self.selectNextObservingState(observingState))            
         else:
             
             
             if self.stateIsTerminal(observingState):
                 score = self.calculateScore(Board(observingState))
             else:
-                expandedState = self.expandState(observingState, states)
+                expandedState = self.expandState(observingState)
 
                 if self.stateIsTerminal(expandedState):
                     score = self.calculateScore(Board(expandedState))
                 else:
                     score = self.generateRolloutScore(expandedState)
                 
-                states[expandedState].score += score
-                states[expandedState].nbrOfSimulations += 1
+                self.states[expandedState].score += score
+                self.states[expandedState].nbrOfSimulations += 1
         
         
-        states[observingState].score += score
-        states[observingState].nbrOfSimulations += 1
+        self.states[observingState].score += score
+        self.states[observingState].nbrOfSimulations += 1
         
         return score
     
-    def addExistingNextStatesNotInNextStates(self, observingState, states):
+    def addExistingNextStatesNotInNextStates(self, observingState):
         allNextStates = self.generateNextStates(observingState)
         
         for state in allNextStates:
-            if((state not in states[observingState].nextStates) and (state in states)):
-                states[observingState].nextStates.append(state)
+            if((state not in self.states[observingState].nextStates) and (state in self.states)):
+                self.states[observingState].nextStates.append(state)
     
-    def selectNextObservingState(self, observingState, states):
+    def selectNextObservingState(self, observingState):
         nextState = None
-        for state in states[observingState].nextStates:
+        for state in self.states[observingState].nextStates:
             if nextState is not None:
-                if states[state].calculateUCT(states[observingState].nbrOfSimulations) > states[nextState].calculateUCT(states[observingState].nbrOfSimulations):
+                if self.states[state].calculateUCT(self.states[observingState].nbrOfSimulations) > self.states[nextState].calculateUCT(self.states[observingState].nbrOfSimulations):
                     nextState = state
             else:
                 nextState = state
                 
         return nextState
     
-    def expandState(self, state, states):
+    def expandState(self, state):
         nextStates = self.generateNextStates(state)
             
-        possibleStates = [possibleState for possibleState in nextStates if possibleState not in states] 
+        possibleStates = [possibleState for possibleState in nextStates if possibleState not in self.states] 
 
         expandedState = possibleStates[randint(0, (len(possibleStates) - 1))]
                 
-        states[state].nextStates.append(expandedState)
-        states[expandedState] = Node()
+        self.states[state].nextStates.append(expandedState)
+        self.states[expandedState] = Node()
         
         return expandedState
         
@@ -147,10 +148,10 @@ class MCTS_BOT(object):
     def hasWon(self, board):
         return board.checkGameState() == self.playerNbr
         
-    def pickBestMove(self, state, states):
+    def pickBestMove(self, state):
         board = Board(state)
         moves = board.generateLegalMoves()
-        bestState = self.selectNextObservingState(state, states)
+        bestState = self.selectNextObservingState(state)
         bestMove = None
         
         for move in moves:
