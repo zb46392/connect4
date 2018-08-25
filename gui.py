@@ -10,13 +10,18 @@ class GUI(object):
     
     def __init__(self, gamePlay):
         self.root = Tkinter.Tk()
-        
         self.root.title("CONNECT 4")
         self.boardView = None
-        self.root.bind('<Right>', self.handleRightKeyPressed)
-        self.root.bind('<Left>', self.handleLeftKeyPressed)
-        self.root.bind('<Return>', self.handleReturnKeyPressed)
         self.gamePlay = gamePlay
+        self.root.bind('<Escape>', self.handleEscKeyPressed)        
+        
+        if self.gamePlay is self.USER_PLAY:    
+            self.board = None
+            self.root.bind('<Right>', self.handleNavKeyPressed)
+            self.root.bind('<Left>', self.handleNavKeyPressed)
+            self.root.bind('<Return>', self.handleReturnKeyPressed)
+            self.move = Tkinter.IntVar()
+        
         
     def show(self, board):
         if self.gamePlay is self.BOT_PLAY:
@@ -45,6 +50,8 @@ class GUI(object):
                 frame.pack()
                 self.boardView = Canvas(frame, bg='blue', height=board.ROWS*self.cellSize+self.cellSize, width=board.COLLUMNS*self.cellSize)
                 self.boardView.pack(side=Tkinter.TOP)
+                
+            self.board = board
             
             self.boardView.children.clear()
             b = board.toArray()
@@ -56,7 +63,10 @@ class GUI(object):
             
             o = (self.USER_POS%board.COLLUMNS) * self.cellSize + self.cellSize//10, self.cellSize//10, (self.USER_POS%board.COLLUMNS) * self.cellSize + self.cellSize - self.cellSize//10, self.cellSize - self.cellSize//10
             
-            self.boardView.create_oval(o, fill='green')
+            if board.turn == 1:
+                self.boardView.create_oval(o, fill='red')
+            else:
+                self.boardView.create_oval(o, fill='yellow')
             
             for i in range(board.COLLUMNS * board.ROWS):
                 x, y = (i%board.COLLUMNS) * self.cellSize, (i//board.COLLUMNS) * self.cellSize + self.cellSize
@@ -70,18 +80,54 @@ class GUI(object):
                 else:
                     self.boardView.create_oval(oval, fill='yellow')
     
-    def handleRightKeyPressed(self, event):
-        self.USER_POS += 1
-        
-    def handleLeftKeyPressed(self, event):
-        self.USER_POS -= 1
+    def handleNavKeyPressed(self, event):
+        if self.board is not None:
+            color = None
+
+            if self.board.turn == 1:
+                color = 'red'
+            else:
+                color = 'yellow'
+            
+            o = self.createUserOval()
+            self.boardView.create_oval(o, fill='blue', outline='blue')
+            
+            self.calculateNewUserPos(event)
+            
+            o = self.createUserOval()
+            self.boardView.create_oval(o, fill=color)
         
     def handleReturnKeyPressed(self, event):
+        if self.board is not None:
+            for move in self.board.generateLegalMoves():
+                if (move % self.board.COLLUMNS == self.USER_POS):
+                    self.move.set(move)
+                    
+    def handleEscKeyPressed(self, event):
         self.close()
         
     def waitUserMove(self, board):
-        pass
+        
+        self.root.wait_variable(self.move)
+        
+        return self.move.get()
+    
+    def calculateNewUserPos(self, event):
+        if event.keysym == "Right":
+            self.USER_POS += 1
+        else:
+            self.USER_POS -= 1
             
+        if(self.USER_POS == self.board.COLLUMNS):
+            self.USER_POS = 0
+        elif(self.USER_POS < 0):
+            self.USER_POS = self.board.COLLUMNS - 1
+            
+    def createUserOval(self):
+        if self.board is not None:
+            return (self.USER_POS%self.board.COLLUMNS) * self.cellSize + self.cellSize//10, self.cellSize//10, (self.USER_POS%self.board.COLLUMNS) * self.cellSize + self.cellSize - self.cellSize//10, self.cellSize - self.cellSize//10
+        else:
+            return None
     
     def close(self):
         print("Exiting...")

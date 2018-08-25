@@ -20,20 +20,18 @@ def guiPlay():
         time.sleep(0.5)
         
 def guiUserPlay():
-    '''
     board = Board()
     bot = MCTS_BOT()
     
     while (board.checkGameState() == board.STILL_PLAYING):
+        if gui is not None:
+            gui.show(board)
         if board.turn == 1:
             board.move(gui.waitUserMove(board.copy()))
         else:
             board.move(bot.makeMove(board.copy()))
         if gui is not None:
             gui.show(board)
-            
-        time.sleep(0.5)
-    '''
     
 
 RANDOM_VS_MCTS_GUI = 0
@@ -74,26 +72,13 @@ if __name__ == '__main__':
         print("\nrndBot: " + str(float(bot1Score)/nbrOfPlays) + " - " + "mctsBot: " + str(float(bot2Score)/nbrOfPlays))
     else:
         '''
-        gui = GUI(GUI.USER_PLAY)
-        t = threading.Thread(target=guiUserPlay)
-        t.start()
-        gui.root.mainloop()
-        gui = None
-        thread_stop = True
-        t.join()
-        #
-        b = Board()
-        gui = GUI(GUI.USER_PLAY)
-        gui.show(b)
-        gui.root.mainloop()
-        '''
-        
         board = Board()
         bot = MCTS_BOT()
         botScore = 0
         playerScore = 0        
         
         board = Board()
+        
         while (board.checkGameState() == board.STILL_PLAYING):
             if board.turn == 1:
                 board.move(bot.makeMove(board.copy()))
@@ -116,3 +101,12 @@ if __name__ == '__main__':
             print("PLAYER 2 WINS!\n")
             
         print(board)
+        '''
+        
+        gui = GUI(GUI.USER_PLAY)
+        t = threading.Thread(target=guiUserPlay)
+        t.start()
+        gui.root.mainloop()
+        gui = None
+        thread_stop = True
+        t.join()
